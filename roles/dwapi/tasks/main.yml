@@ -1,0 +1,37 @@
+---
+
+- name: Stop running running containers and remove them.
+  become: yes
+  ignore_errors: yes
+  shell: "{{ item }}"
+  loop:
+    - docker stop $(docker ps -aq --filter name=dwapi)
+    - docker rm $(docker ps -aq --filter name=dwapi)
+  tags: ["common", "dwapi"]
+
+- name: Install DWAPI
+  shell:
+    cmd: docker run --name dwapi -p {{dwapi_port_two}}:{{dwapi_port_two}} -p {{dwapi_port_one}}:{{dwapi_port_one}} -d --restart unless-stopped kenyahmis/dwapi:latest
+    warn: no
+  become: yes
+  tags: ["common", "dwapi"]
+
+- name: Upgrade DWAPI if already installed.
+  shell:
+    cmd: "{{ item }}"
+    warn: no
+  become: yes
+  loop:
+    - docker ps -a | grep "dwapi" | awk '{print $1}' | xargs sudo docker rm -f
+    - docker images -a | grep "dwapi" | awk '{print $3}' | xargs sudo docker rmi
+    - docker run --name dwapi -p {{dwapi_port_two}}:{{dwapi_port_two}} -p {{dwapi_port_one}}:{{dwapi_port_one}} -d --restart unless-stopped kenyahmis/dwapi:latest
+  tags: ["common", "dwapi"]
+
+- name: Ensure docker service is (re)started
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+    enabled: yes
+    force: yes
+  become: yes
+  tags: ["common", "dwapi"]

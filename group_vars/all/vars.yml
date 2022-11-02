@@ -1,0 +1,4 @@
+---
+# General settings for all hosts
+server_user: "{{ server_user }}"
+user_group: "{{ user_group }}"

@@ -1,0 +1,25 @@
+https://{{server_domain}} {
+    reverse_proxy 127.0.0.1:{{ dwapi_port_one }}
+    log {
+        output file /var/log/caddy/caddy.https.log {
+            roll_size     10MiB
+            roll_keep     5
+            roll_keep_for 96h
+        }
+        format console
+        level  INFO
+    }
+}
+
+http://{{server_domain}}  {
+    log {
+        output file /var/log/caddy/caddy.http.log {
+            roll_size     10MiB
+            roll_keep     5
+            roll_keep_for 96h
+        }
+        format console
+        level  INFO
+    }
+    redir https://{host}{uri}
+}
